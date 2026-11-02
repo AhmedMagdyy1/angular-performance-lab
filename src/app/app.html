@@ -1,0 +1,201 @@
+<header class="top">
+  <div class="wrap">
+    <p class="eyebrow">Angular 22 · interactive demo</p>
+    <h1>Angular Performance Lab</h1>
+    <p class="lede">
+      A live market grid with the four performance mistakes I find most often in client apps. Switch
+      each fix on and off and watch the numbers change, or run the benchmark to see before and after
+      side by side.
+    </p>
+  </div>
+</header>
+
+<section class="metrics wrap" aria-label="Live metrics">
+  <div class="metric" [class.bad]="metrics.fps() < 40">
+    <b>{{ metrics.fps() }}</b
+    ><span>Frames per second</span>
+  </div>
+  <div class="metric" [class.bad]="metrics.renderMs() > 16">
+    <b>{{ metrics.renderMs().toFixed(1) }} ms</b><span>Update → rendered</span>
+  </div>
+  <div class="metric" [class.bad]="metrics.nodesPerTick() > 50">
+    <b>{{ metrics.nodesPerTick() | number: '1.0-0' }}</b
+    ><span>Elements rebuilt / update</span>
+  </div>
+  <div class="metric" [class.bad]="metrics.domNodes() > 5000">
+    <b>{{ metrics.domNodes().toLocaleString() }}</b
+    ><span>DOM elements</span>
+  </div>
+  <div class="metric" [class.bad]="feed.activeSubscriptions() > 1">
+    <b>{{ feed.activeSubscriptions() }}</b
+    ><span>Live subscriptions</span>
+  </div>
+</section>
+
+<main class="wrap lab">
+  <aside class="controls">
+    <div class="card">
+      <div class="row-controls">
+        <button class="btn" (click)="togglePlay()">
+          {{ feed.running() ? '❚❚ Pause feed' : '▶ Resume feed' }}
+        </button>
+        <label>
+          Rows
+          <select #size aria-label="Number of rows" (change)="setSize(size.value)">
+            @for (s of sizes; track s) {
+              <option [value]="s" [selected]="s === feed.size()">{{ s.toLocaleString() }}</option>
+            }
+          </select>
+        </label>
+      </div>
+      <div class="row-controls">
+        <button
+          class="btn primary"
+          (click)="setAll(true)"
+          [disabled]="settings.enabledCount() === 4"
+        >
+          Apply all fixes
+        </button>
+        <button class="btn" (click)="setAll(false)" [disabled]="settings.enabledCount() === 0">
+          Remove all
+        </button>
+      </div>
+      <p class="hint">{{ settings.enabledCount() }} of 4 fixes on · 4 price updates per second</p>
+    </div>
+
+    @for (fix of fixList; track fix.id; let i = $index) {
+      <article class="card fix" [class.on]="settings.fixes()[fix.id]">
+        <header>
+          <span class="num">{{ i + 1 }}</span>
+          <h2>{{ fix.title }}</h2>
+          <button
+            class="switch"
+            role="switch"
+            [attr.aria-checked]="settings.fixes()[fix.id]"
+            [attr.aria-label]="'Fix ' + (i + 1) + ': ' + fix.title"
+            (click)="toggleFix(fix.id)"
+          >
+            <span></span>
+          </button>
+        </header>
+        <p><b>Problem.</b> {{ fix.problem }}</p>
+        <p><b>Fix.</b> {{ fix.fix }}</p>
+        <pre><code class="before">- {{ fix.before }}</code>
+<code class="after">+ {{ fix.after }}</code></pre>
+        @if (fix.id === 'unsubscribe') {
+          <div class="row-controls">
+            <button class="btn" (click)="panelOpen.set(!panelOpen())">
+              {{ panelOpen() ? 'Close' : 'Open' }} panel
+            </button>
+            <button class="btn" (click)="cyclePanel(20)">Open &amp; close 20×</button>
+            <button
+              class="btn"
+              (click)="releaseLeaks()"
+              [disabled]="feed.activeSubscriptions() === 0"
+            >
+              Release leaks
+            </button>
+          </div>
+        }
+      </article>
+    }
+  </aside>
+
+  <section class="stage">
+    <div class="card grid-card">
+      <lab-market-grid />
+    </div>
+    @if (panelOpen()) {
+      <aside class="card panel">
+        <lab-detail-panel />
+      </aside>
+    }
+  </section>
+</main>
+
+<section class="wrap bench">
+  <div class="card">
+    <div class="bench-head">
+      <div>
+        <h2>Benchmark</h2>
+        <p class="hint">
+          Runs 5 seconds with no fixes, then 5 seconds with all four, on
+          {{ feed.size().toLocaleString() }} rows.
+        </p>
+      </div>
+      <button class="btn primary" (click)="runBenchmark()" [disabled]="benchRunning()">
+        {{ benchRunning() ? 'Running…' : 'Run benchmark' }}
+      </button>
+    </div>
+    @if (benchStatus()) {
+      <p class="hint" aria-live="polite">{{ benchStatus() }}</p>
+    }
+    @if (results().length) {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              <th>FPS</th>
+              <th>Update → rendered</th>
+              <th>Elements rebuilt / update</th>
+              <th>DOM elements</th>
+              <th>Live subscriptions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of results(); track r.label) {
+              <tr>
+                <th>{{ r.label }}</th>
+                <td>{{ r.fps }}</td>
+                <td>{{ r.renderMs.toFixed(1) }} ms</td>
+                <td>{{ r.nodesPerTick | number: '1.0-0' }}</td>
+                <td>{{ r.domNodes.toLocaleString() }}</td>
+                <td>{{ r.subscriptions }}</td>
+              </tr>
+            }
+            @if (results().length === 2) {
+              <tr class="gain">
+                <th>Improvement</th>
+                <td>{{ ratio(results()[1].fps, results()[0].fps) }}</td>
+                <td>{{ ratio(results()[0].renderMs, results()[1].renderMs) }} faster</td>
+                <td>
+                  {{ results()[0].nodesPerTick | number: '1.0-0' }} →
+                  {{ results()[1].nodesPerTick | number: '1.0-0' }}
+                </td>
+                <td>{{ ratio(results()[0].domNodes, results()[1].domNodes) }} fewer</td>
+                <td>{{ results()[0].subscriptions }} → {{ results()[1].subscriptions }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</section>
+
+<footer class="wrap foot">
+  <div>
+    <h2>Is your Angular app slow, or leaking memory?</h2>
+    <p>
+      I'm Ahmed Magdy, a senior Angular developer. I profile real apps, find problems like these,
+      fix them, and show you the before and after numbers.
+    </p>
+  </div>
+  <div class="foot-links">
+    <a
+      class="btn primary"
+      href="https://www.upwork.com/freelancers/~01a957fdca72010059"
+      target="_blank"
+      rel="noopener"
+      >Hire me on Upwork</a
+    >
+    <a
+      class="btn"
+      href="https://github.com/AhmedMagdyy1/angular-performance-lab"
+      target="_blank"
+      rel="noopener"
+      >Code on GitHub</a
+    >
+  </div>
+</footer>

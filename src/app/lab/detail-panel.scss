@@ -1,0 +1,35 @@
+:host {
+  display: block;
+}
+h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-variant-numeric: tabular-nums;
+}
+li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+.sym {
+  font-weight: 600;
+  font-family: var(--mono);
+}
+.up {
+  color: var(--up);
+}
+.down {
+  color: var(--down);
+}
+.muted {
+  display: block;
+  color: var(--muted);
+}

@@ -1,0 +1,28 @@
+:root {
+  --bg: #0b0e14;
+  --panel: #121722;
+  --panel-2: #1a2030;
+  --code: #0a0d13;
+  --line: #242c3d;
+  --text: #e7eaf2;
+  --muted: #8d96ab;
+  --accent: #7cc4ff;
+  --good: #3ddc97;
+  --up: #3ddc97;
+  --down: #ff6b6b;
+  --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    15px/1.5 Inter,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+}

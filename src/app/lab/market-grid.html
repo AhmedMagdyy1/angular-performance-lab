@@ -1,0 +1,49 @@
+<div class="head row" role="row">
+  <span role="columnheader">Symbol</span>
+  <span role="columnheader">Company</span>
+  <span role="columnheader" class="hide-sm">Sector</span>
+  <span role="columnheader" class="num">Price</span>
+  <span role="columnheader" class="num">Change</span>
+  <span role="columnheader" class="num hide-sm">Volume</span>
+</div>
+
+<ng-template #rowTpl let-row>
+  <span class="sym">{{ row.symbol }}</span>
+  <span class="name">{{ row.name }}</span>
+  <span class="hide-sm muted">{{ row.sector }}</span>
+  @if (fixes().purePipes) {
+    <span class="num">{{ row.price | price }}</span>
+    <span class="num" [class.up]="row.price >= row.open" [class.down]="row.price < row.open">{{
+      row.price | change: row.open
+    }}</span>
+    <span class="num hide-sm muted">{{ row.volume | volume }}</span>
+  } @else {
+    <span class="num">{{ formatPrice(row) }}</span>
+    <span class="num" [class.up]="row.price >= row.open" [class.down]="row.price < row.open">{{
+      changeOf(row)
+    }}</span>
+    <span class="num hide-sm muted">{{ volumeOf(row) }}</span>
+  }
+</ng-template>
+
+@if (fixes().virtualScroll) {
+  <cdk-virtual-scroll-viewport
+    class="body"
+    [itemSize]="rowHeight"
+    minBufferPx="360"
+    maxBufferPx="720"
+    role="rowgroup"
+  >
+    <div class="row" role="row" *cdkVirtualFor="let row of rows(); trackBy: trackBy">
+      <ng-container *ngTemplateOutlet="rowTpl; context: { $implicit: row }" />
+    </div>
+  </cdk-virtual-scroll-viewport>
+} @else {
+  <div class="body scroll" role="rowgroup">
+    @for (row of rows(); track trackKey()(row)) {
+      <div class="row" role="row">
+        <ng-container *ngTemplateOutlet="rowTpl; context: { $implicit: row }" />
+      </div>
+    }
+  </div>
+}
